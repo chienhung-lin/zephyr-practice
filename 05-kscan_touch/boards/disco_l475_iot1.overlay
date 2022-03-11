@@ -1,0 +1,9 @@
+/ {
+	aliases {
+		kscan0 = &touch_controller;
+	};
+};
+
+&touch_controller {
+	int-gpios = <&arduino_header 13 GPIO_ACTIVE_LOW>;
+};
