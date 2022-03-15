@@ -1,0 +1,4 @@
+&touch_controller {
+	/* uncomment it if want interrupt mode */
+	/* int-gpios = <&arduino_header 13 GPIO_ACTIVE_LOW>; */
+};
