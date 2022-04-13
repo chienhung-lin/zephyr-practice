@@ -3,7 +3,7 @@
 
 manifest:
   self:
-    path: zephyr-practice/08-eswifi
+    path: zephyr-practice/08-net_shell
 
   remotes:
     - name: zephyrproject-rtos
