@@ -28,7 +28,6 @@ LOG_MODULE_DECLARE(net_echo_client_sample, LOG_LEVEL_DBG);
  * under the same IP as the peer or uses a different port number,
  * modify the values.
  */
-#define SOCKS5_PROXY_V6_ADDR CONFIG_NET_CONFIG_PEER_IPV6_ADDR
 #define SOCKS5_PROXY_V4_ADDR CONFIG_NET_CONFIG_PEER_IPV4_ADDR
 #define SOCKS5_PROXY_PORT 1080
 
@@ -114,15 +113,6 @@ static int start_tcp_proto(struct data *data, struct sockaddr *addr,
 			inet_pton(AF_INET, SOCKS5_PROXY_V4_ADDR,
 				  &proxy4->sin_addr);
 			proxy_addrlen = sizeof(struct sockaddr_in);
-		} else if (addr->sa_family == AF_INET6) {
-			struct sockaddr_in6 *proxy6 =
-				(struct sockaddr_in6 *)&proxy_addr;
-
-			proxy6->sin6_family = AF_INET6;
-			proxy6->sin6_port = htons(SOCKS5_PROXY_PORT);
-			inet_pton(AF_INET6, SOCKS5_PROXY_V6_ADDR,
-				  &proxy6->sin6_addr);
-			proxy_addrlen = sizeof(struct sockaddr_in6);
 		} else {
 			return -EINVAL;
 		}
@@ -222,20 +212,6 @@ int start_tcp(void)
 {
 	int ret = 0;
 	struct sockaddr_in addr4;
-	struct sockaddr_in6 addr6;
-
-	if (IS_ENABLED(CONFIG_NET_IPV6)) {
-		addr6.sin6_family = AF_INET6;
-		addr6.sin6_port = htons(PEER_PORT);
-		inet_pton(AF_INET6, CONFIG_NET_CONFIG_PEER_IPV6_ADDR,
-			  &addr6.sin6_addr);
-
-		ret = start_tcp_proto(&conf.ipv6, (struct sockaddr *)&addr6,
-				      sizeof(addr6));
-		if (ret < 0) {
-			return ret;
-		}
-	}
 
 	if (IS_ENABLED(CONFIG_NET_IPV4)) {
 		addr4.sin_family = AF_INET;
@@ -245,13 +221,6 @@ int start_tcp(void)
 
 		ret = start_tcp_proto(&conf.ipv4, (struct sockaddr *)&addr4,
 				      sizeof(addr4));
-		if (ret < 0) {
-			return ret;
-		}
-	}
-
-	if (IS_ENABLED(CONFIG_NET_IPV6)) {
-		ret = send_tcp_data(&conf.ipv6);
 		if (ret < 0) {
 			return ret;
 		}
@@ -268,13 +237,6 @@ int process_tcp(void)
 {
 	int ret = 0;
 
-	if (IS_ENABLED(CONFIG_NET_IPV6)) {
-		ret = process_tcp_proto(&conf.ipv6);
-		if (ret < 0) {
-			return ret;
-		}
-	}
-
 	if (IS_ENABLED(CONFIG_NET_IPV4)) {
 		ret = process_tcp_proto(&conf.ipv4);
 		if (ret < 0) {
@@ -287,12 +249,6 @@ int process_tcp(void)
 
 void stop_tcp(void)
 {
-	if (IS_ENABLED(CONFIG_NET_IPV6)) {
-		if (conf.ipv6.tcp.sock >= 0) {
-			(void)close(conf.ipv6.tcp.sock);
-		}
-	}
-
 	if (IS_ENABLED(CONFIG_NET_IPV4)) {
 		if (conf.ipv4.tcp.sock >= 0) {
 			(void)close(conf.ipv4.tcp.sock);

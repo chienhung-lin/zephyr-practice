@@ -187,20 +187,6 @@ int start_udp(void)
 {
 	int ret = 0;
 	struct sockaddr_in addr4;
-	struct sockaddr_in6 addr6;
-
-	if (IS_ENABLED(CONFIG_NET_IPV6)) {
-		addr6.sin6_family = AF_INET6;
-		addr6.sin6_port = htons(PEER_PORT);
-		inet_pton(AF_INET6, CONFIG_NET_CONFIG_PEER_IPV6_ADDR,
-			  &addr6.sin6_addr);
-
-		ret = start_udp_proto(&conf.ipv6, (struct sockaddr *)&addr6,
-				      sizeof(addr6));
-		if (ret < 0) {
-			return ret;
-		}
-	}
 
 	if (IS_ENABLED(CONFIG_NET_IPV4)) {
 		addr4.sin_family = AF_INET;
@@ -210,13 +196,6 @@ int start_udp(void)
 
 		ret = start_udp_proto(&conf.ipv4, (struct sockaddr *)&addr4,
 				      sizeof(addr4));
-		if (ret < 0) {
-			return ret;
-		}
-	}
-
-	if (IS_ENABLED(CONFIG_NET_IPV6)) {
-		ret = send_udp_data(&conf.ipv6);
 		if (ret < 0) {
 			return ret;
 		}
@@ -233,13 +212,6 @@ int process_udp(void)
 {
 	int ret = 0;
 
-	if (IS_ENABLED(CONFIG_NET_IPV6)) {
-		ret = process_udp_proto(&conf.ipv6);
-		if (ret < 0) {
-			return ret;
-		}
-	}
-
 	if (IS_ENABLED(CONFIG_NET_IPV4)) {
 		ret = process_udp_proto(&conf.ipv4);
 		if (ret < 0) {
@@ -252,15 +224,6 @@ int process_udp(void)
 
 void stop_udp(void)
 {
-	if (IS_ENABLED(CONFIG_NET_IPV6)) {
-		k_work_cancel_delayable(&conf.ipv6.udp.recv);
-		k_work_cancel_delayable(&conf.ipv6.udp.transmit);
-
-		if (conf.ipv6.udp.sock >= 0) {
-			(void)close(conf.ipv6.udp.sock);
-		}
-	}
-
 	if (IS_ENABLED(CONFIG_NET_IPV4)) {
 		k_work_cancel_delayable(&conf.ipv4.udp.recv);
 		k_work_cancel_delayable(&conf.ipv4.udp.transmit);

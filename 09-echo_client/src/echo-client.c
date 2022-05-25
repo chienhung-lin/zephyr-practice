@@ -31,6 +31,8 @@ LOG_MODULE_REGISTER(net_echo_client_sample, LOG_LEVEL_DBG);
 #include <net/net_event.h>
 #include <net/net_conn_mgr.h>
 
+#include <net/wifi_mgmt.h>
+
 #if defined(CONFIG_USERSPACE)
 #include <app_memory/app_memdomain.h>
 K_APPMEM_PARTITION_DEFINE(app_partition);
@@ -80,11 +82,6 @@ APP_DMEM struct configs conf = {
 		.udp.sock = INVALID_SOCK,
 		.tcp.sock = INVALID_SOCK,
 	},
-	.ipv6 = {
-		.proto = "IPv6",
-		.udp.sock = INVALID_SOCK,
-		.tcp.sock = INVALID_SOCK,
-	},
 };
 
 static APP_BMEM struct pollfd fds[4];
@@ -94,6 +91,18 @@ static APP_BMEM bool connected;
 K_SEM_DEFINE(run_app, 0, 1);
 
 static struct net_mgmt_event_callback mgmt_cb;
+
+#include "wifi_ssid_psk.h"
+
+static struct wifi_connect_req_params wifi_cnx_params =
+{
+	.ssid = wifi_ssid,
+	.ssid_length = sizeof(wifi_ssid),
+	.psk = wifi_psk,
+	.psk_length = sizeof(wifi_psk),
+	.channel = WIFI_CHANNEL_ANY,
+	.security = WIFI_SECURITY_TYPE_PSK
+};
 
 static void prepare_fds(void)
 {
@@ -105,18 +114,6 @@ static void prepare_fds(void)
 
 	if (conf.ipv4.tcp.sock >= 0) {
 		fds[nfds].fd = conf.ipv4.tcp.sock;
-		fds[nfds].events = POLLIN;
-		nfds++;
-	}
-
-	if (conf.ipv6.udp.sock >= 0) {
-		fds[nfds].fd = conf.ipv6.udp.sock;
-		fds[nfds].events = POLLIN;
-		nfds++;
-	}
-
-	if (conf.ipv6.tcp.sock >= 0) {
-		fds[nfds].fd = conf.ipv6.tcp.sock;
 		fds[nfds].events = POLLIN;
 		nfds++;
 	}
@@ -205,7 +202,6 @@ static void event_handler(struct net_mgmt_event_callback *cb,
 
 		connected = true;
 		conf.ipv4.udp.mtu = net_if_get_mtu(iface);
-		conf.ipv6.udp.mtu = conf.ipv4.udp.mtu;
 		k_sem_give(&run_app);
 
 		return;
@@ -274,6 +270,8 @@ static void init_app(void)
 		net_conn_mgr_resend_status();
 	}
 
+	wifi_connect(&wifi_cnx_params);
+
 	init_vlan();
 }
 
@@ -291,6 +289,14 @@ static int start_client(void)
 
 		while (connected && (ret == 0)) {
 			ret = run_udp_and_tcp();
+
+			if (ret != 0) {
+				LOG_INF("echo test fails");
+			} else {
+				LOG_INF("echo test succeeds");
+			}
+
+			k_sleep(K_SECONDS(5));
 
 			if (iterations > 0) {
 				i++;

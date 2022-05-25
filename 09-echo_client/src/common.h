@@ -50,15 +50,10 @@ struct data {
 
 struct configs {
 	struct data ipv4;
-	struct data ipv6;
 };
 
 #if !defined(CONFIG_NET_CONFIG_PEER_IPV4_ADDR)
 #define CONFIG_NET_CONFIG_PEER_IPV4_ADDR ""
-#endif
-
-#if !defined(CONFIG_NET_CONFIG_PEER_IPV6_ADDR)
-#define CONFIG_NET_CONFIG_PEER_IPV6_ADDR ""
 #endif
 
 extern const char lorem_ipsum[];
@@ -81,3 +76,6 @@ static inline int init_vlan(void)
 	return 0;
 }
 #endif
+
+#include <net/wifi_mgmt.h>
+int wifi_connect(struct wifi_connect_req_params *cnx_params);
