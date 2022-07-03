@@ -1,0 +1,29 @@
+# Private config options for http-client sample app
+
+# Copyright (c) 2022 Chien Hung Lin
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "Http client practice"
+
+config WIFI_ROUTER_SETTING
+	bool "Enable wifi router setting"
+	default yes
+	depends on WIFI
+	help
+	  Set wifi ssid and psk for connect for connecting router.
+
+config WIFI_SSID
+	string "Set connecting wifi ssid"
+	default "wifi_ssid"
+	depends on WIFI_ROUTER_SETTING
+	help
+	  Set connecting wifi ssid.
+
+config WIFI_PSK
+	string "Set connecting wifi password"
+	default "wifi_passwd"
+	depends on WIFI_ROUTER_SETTING
+	help
+          Set connecting wifi password.
+
+source "Kconfig.zephyr"
