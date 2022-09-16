@@ -1,0 +1,5 @@
+&clk_msi {
+	msi-range = <11>; /* 48MHz */
+	msi-pll-mode;
+	status = "okay";
+};

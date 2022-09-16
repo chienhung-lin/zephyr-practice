@@ -1,0 +1,17 @@
+# Copyright (c) 2022 Chien
+# SPDX-License-Identifier: MIT
+
+
+manifest:
+  self:
+    path: zephyr-practice/12-tracing_usb_backend
+
+  remotes:
+    - name: zephyrproject-rtos
+      url-base: https://github.com/zephyrproject-rtos
+
+  projects:
+    - name: zephyr
+      remote: zephyrproject-rots
+      revision: main
+      import: true
