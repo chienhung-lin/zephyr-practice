@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <zephyr.h>
-#include <sys/printk.h>
+#include <zephyr/kernel.h>
 
 /* size of stack area used by threadA */
 #define STACKSIZE 1024

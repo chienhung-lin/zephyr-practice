@@ -12,6 +12,6 @@ manifest:
   projects:
     - name: zephyr
       remote: zephyrproject-rots
-      revision: main
+      revision: v3.2.0
       import: true
 

@@ -9,72 +9,63 @@
  * @file Sample app to demonstrate PWM-based LED fade
  */
 
-#include <zephyr.h>
-#include <sys/printk.h>
-#include <device.h>
-#include <drivers/pwm.h>
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/pwm.h>
 
-#define PWM_LED0_NODE	DT_ALIAS(pwm_led0)
+static const struct pwm_dt_spec pwm_led0 = PWM_DT_SPEC_GET(DT_ALIAS(pwm_led0));
 
-#if DT_NODE_HAS_STATUS(PWM_LED0_NODE, okay)
-#define PWM_CTLR	DT_PWMS_CTLR(PWM_LED0_NODE)
-#define PWM_CHANNEL	DT_PWMS_CHANNEL(PWM_LED0_NODE)
-#define PWM_FLAGS	DT_PWMS_FLAGS(PWM_LED0_NODE)
-#else
-#error "Unsupported board: pwm-led0 devicetree alias is not defined"
-#define PWM_CTLR	DT_INVALID_NODE
-#define PWM_CHANNEL	0
-#define PWM_FLAGS	0
-#endif
-
-/*
- * This period should be fast enough to be above the flicker fusion
- * threshold. The steps should also be small enough, and happen
- * quickly enough, to make the output fade change appear continuous.
- */
-#define PERIOD_USEC	20000U
-#define NUM_STEPS	50U
-#define STEP_USEC	(PERIOD_USEC / NUM_STEPS)
-#define SLEEP_MSEC	25U
+#define MIN_PERIOD PWM_SEC(1U) / 128U
+#define MAX_PERIOD PWM_SEC(1U)
 
 void main(void)
 {
-	const struct device *pwm;
-	uint32_t pulse_width = 0U;
-	uint8_t dir = 1U;
+	uint32_t max_period;
+  uint32_t period;
+	uint8_t dir = 0U;
 	int ret;
 
 	printk("PWM-based LED fade\n");
 
-	pwm = DEVICE_DT_GET(PWM_CTLR);
-	if (!device_is_ready(pwm)) {
-		printk("Error: PWM device %s is not ready\n", pwm->name);
+	if (!device_is_ready(pwm_led0.dev)) {
+		printk("Error: PWM device %s is not ready\n",
+            pwm_led0.dev->name);
 		return;
 	}
 
+  /* calibrating */
+  printk("Calibrating for channel %d...\n", pwm_led0.channel);
+  max_period = MAX_PERIOD;
+  while (pwm_set_dt(&pwm_led0, max_period, max_period / 2U)) {
+    max_period /= 2U;
+    if (max_period < (4U * MIN_PERIOD)) {
+      printk("Error: PWM device "
+             "does not support a period at least %lu\n",
+             4U * MIN_PERIOD);
+      return;
+    }
+  }
+  
+  printk("Done calibrating; maximum/minimum periods %u/%lu usec\n",
+         max_period, MIN_PERIOD);
+
+  period = max_period;
 	while (1) {
-		ret = pwm_pin_set_usec(pwm, PWM_CHANNEL, PERIOD_USEC,
-				       pulse_width, PWM_FLAGS);
+		ret = pwm_set_dt(&pwm_led0, period, period / 2U);
 		if (ret) {
 			printk("Error %d: failed to set pulse width\n", ret);
 			return;
 		}
 
-		if (dir) {
-			pulse_width += STEP_USEC;
-			if (pulse_width >= PERIOD_USEC) {
-				pulse_width = PERIOD_USEC - STEP_USEC;
-				dir = 0U;
-			}
-		} else {
-			if (pulse_width >= STEP_USEC) {
-				pulse_width -= STEP_USEC;
-			} else {
-				pulse_width = STEP_USEC;
-				dir = 1U;
-			}
-		}
+    period = dir ? (period * 2U) : (period / 2U);
+    if (period > max_period) {
+      period = max_period / 2U;
+      dir = 0U;
+    } else if (period < MIN_PERIOD) {
+      period = MIN_PERIOD * 2U;
+      dir = 1U;
+    }
 
-		k_sleep(K_MSEC(SLEEP_MSEC));
+		k_sleep(K_SECONDS(4U));
 	}
 }

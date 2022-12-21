@@ -1,9 +1,9 @@
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(net_echo_client_sample, LOG_LEVEL_DBG);
 
-#include <net/net_if.h>
-#include <net/net_mgmt.h>
-#include <net/wifi_mgmt.h>
+#include <zephyr/net/net_if.h>
+#include <zephyr/net/net_mgmt.h>
+#include <zephyr/net/wifi_mgmt.h>
 
 int wifi_connect(struct wifi_connect_req_params *cnx_params)
 {

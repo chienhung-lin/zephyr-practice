@@ -1,4 +1,4 @@
-#include <zephyr/zephyr.h>
+#include <zephyr/kernel.h>
 
 #include <zephyr/logging/log.h>
 
@@ -180,7 +180,7 @@ static void http_client(void)
 {
 	struct sensor_package pk;
 	int ret = 0;
-	const struct device *dev = device_get_binding("HTS221");
+	const struct device *dev = DEVICE_DT_GET_ONE(st_hts221);
 
 	if (dev == NULL) {
 		LOG_ERR("fail to get hts221 device");

@@ -11,7 +11,7 @@
 #define PEER_PORT 4242
 
 #if defined(CONFIG_USERSPACE)
-#include <app_memory/app_memdomain.h>
+#include <zephyr/app_memory/app_memdomain.h>
 extern struct k_mem_partition app_partition;
 extern struct k_mem_domain app_domain;
 #define APP_BMEM K_APP_BMEM(app_partition)
@@ -77,5 +77,5 @@ static inline int init_vlan(void)
 }
 #endif
 
-#include <net/wifi_mgmt.h>
+#include <zephyr/net/wifi_mgmt.h>
 int wifi_connect(struct wifi_connect_req_params *cnx_params);

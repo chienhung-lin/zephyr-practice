@@ -1,6 +1,6 @@
 / {
-	aliases {
-		kscan0 = &touch_controller;
+	chosen {
+		zephyr,keyboard-scan = &touch_controller;
 	};
 };
 
